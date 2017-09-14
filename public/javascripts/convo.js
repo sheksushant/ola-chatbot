@@ -30,16 +30,36 @@ botui.action.button({
   ]
 }).then(function (res) { // will be called when a button is clicked.
   if(res.value === 'yes') {
+    getLocation();
     botui.message.add({
       delay: 100,
       content: 'I need your Location..'
     });
-    getLocation();
+    botui.message.add({
+      delay: 2000,
+      content: 'Which cab will you like?'
+    });
 
 
   }
-  
-  console.log(res.value); // will print "one" from 'value'
+ // console.log(res.value); // will print "one" from 'value'
+}).then(function() {
+  botui.action.button({
+    delay: 2800,
+    action: [
+      { 
+        text: 'Micro',
+        value: 'micro'
+      },
+      { 
+        text: 'Mini',
+        value: 'mini'
+      }
+    ]
+  }).then(function (res) { // will be called when a button is clicked.
+    socket.emit('getAddress', { 'lat' : position.coords.latitude,'lng' : position.coords.longitude, 'tyoe' : res.value });
+    console.log(res.value); // will print "one" from 'value'
+  });
 });
 
 //geolocation stuff : 
@@ -55,7 +75,7 @@ function showPosition(position) {
 socket.emit('getAddress', { 'lat' : position.coords.latitude,'lng' : position.coords.longitude});
 }
 
-
+//.
 // botui.message.add({
 //     content: 'Lets Start Talking...',
 //     delay: 1500,

@@ -3,6 +3,7 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
 var geo = require('./geocode');
+var eta = require('./geteta');
 
 var conn = function() {
   server.listen(8010);
@@ -16,8 +17,17 @@ var fromClient = function() {
 
 io.on('connection', function (socket) {
   socket.on('getAddress', function (data) {
-      console.log(data);
-     geo.getAddress(data.lat,data.lng);
+    //  console.log(data);
+    geo.getAddress(data.lat,data.lng).then(function(ans){ console.log(ans);});
+   // console.log(address);
+           // socket.emit('fromServer', { server: "n" });
+
+  });
+
+  socket.on('eta', function (data) {
+    //  console.log(data);
+    eta.geteta(data.lat,data.lng,data.type).then(function(ans){ console.log(ans);});
+   // console.log(address);
            // socket.emit('fromServer', { server: "n" });
 
   });
