@@ -1,8 +1,8 @@
 var botui = new BotUI('api-bot');
 
  var socket = io.connect('http://localhost:8010');
-// // read the BotUI docs : https://docs.botui.org/
-
+let type = "";
+let eta = 0;
 
 botui.message.add({
   delay: 300,
@@ -30,73 +30,76 @@ botui.action.button({
   ]
 }).then(function (res) { // will be called when a button is clicked.
   if(res.value === 'yes') {
-    getLocation();
-    botui.message.add({
-      delay: 100,
-      content: 'I need your Location..'
-    });
     botui.message.add({
       delay: 2000,
       content: 'Which cab will you like?'
+    }).then(function() {
+      botui.action.button({
+        delay: 100,
+        action: [
+          { 
+            text: 'Micro',
+            value: 'micro'
+          },
+          { 
+            text: 'Mini',
+            value: 'mini'
+          }
+        ]
+      }).then(function (res) {
+        type = res.value;
+        getLocation();
+        botui.message.add({
+          delay: 100,
+          content: 'Let me find a cab near your location now....'
+        });
+      })
+      .then(
+          socket.on('etaIS', function (eta) {
+            botui.message.add({
+              delay: 300,
+              content: "so..There is a Cab " + eta.eta + " min(s) away!"
+            });
+            botui.message.add({
+              delay: 900,
+              content: "Should I book it for you?"
+            }).then(
+              botui.action.button({
+                delay: 1000,
+                action: [
+                  { 
+                    text: 'Yes',
+                    value: 'yes'
+                  },
+                  { 
+                    text: 'No',
+                    value: 'no'
+                  }
+                ]
+              }).then(function (res) { // will be called when a button is clicked.
+                console.log(res.value);
+                  if(res.value == 'yes') {
+
+                    botui.message.add({
+                      delay : 100,
+                      content: 'Go ahead, [Login to your Ola Account!]()^'
+                    });
+
+                  }
+              })
+            );
+          })
+          
+      );
     });
-
-
   }
- // console.log(res.value); // will print "one" from 'value'
-}).then(function() {
-  botui.action.button({
-    delay: 2800,
-    action: [
-      { 
-        text: 'Micro',
-        value: 'micro'
-      },
-      { 
-        text: 'Mini',
-        value: 'mini'
-      }
-    ]
-  }).then(function (res) { // will be called when a button is clicked.
-    socket.emit('getAddress', { 'lat' : position.coords.latitude,'lng' : position.coords.longitude, 'tyoe' : res.value });
-    console.log(res.value); // will print "one" from 'value'
-  });
 });
 
 //geolocation stuff : 
 function getLocation() {
-  if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(showPosition);
-  } else {
-    showError(showError);
-  }
-}
-function showPosition(position) {
-//console.log(position.coords.latitude,position.coords.longitude) ;
-socket.emit('getAddress', { 'lat' : position.coords.latitude,'lng' : position.coords.longitude});
+  navigator.geolocation.getCurrentPosition(function(position) {
+
+    socket.emit('getRides', { 'lat' : position.coords.latitude,'lng' : position.coords.longitude, type : type});
+  });
 }
 
-//.
-// botui.message.add({
-//     content: 'Lets Start Talking...',
-//     delay: 1500,
-//   }).then(function () {
-//     botui.action.text({
-//       action: {
-//         placeholder: 'Say Hello', }
-//     }
-//   ).then(function (res) {
-//     socket.emit('fromClient', { client : res.value }); // sends the message typed to server
-//       console.log(res.value); // will print whatever was typed in the field.
-
-//     }).then(function () {
-
-//       socket.on('fromServer', function (data) { // recieveing a reply from server.
-//         console.log(data.server);
-//       botui.message.add({
-//           content: data.server,
-//           delay: 500,
-//         });
-//       });
-
-//     })
-//   });
